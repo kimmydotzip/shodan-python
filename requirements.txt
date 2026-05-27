@@ -3,5 +3,6 @@ click-plugins
 colorama
 requests>=2.2.1
 XlsxWriter
+importlib_metadata;python_version<'3.8'
 ipaddress;python_version<='2.7'
 tldextract

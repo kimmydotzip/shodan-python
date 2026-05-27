@@ -30,13 +30,17 @@ import click
 import csv
 import os
 import os.path
-import pkg_resources
 import shodan
 import shodan.helpers as helpers
 import threading
 import requests
 import time
 import json
+
+try:
+    from importlib import metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 
 # The file converters that are used to go from .json.gz to various other formats
 from shodan.cli.converter import CsvConverter, KmlConverter, GeoJsonConverter, ExcelConverter, ImagesConverter
@@ -50,7 +54,6 @@ from shodan.cli.host import HOST_PRINT
 
 # Allow 3rd-parties to develop custom commands
 from click_plugins import with_plugins
-from pkg_resources import iter_entry_points
 
 # Large subcommands are stored in separate modules
 from shodan.cli.alert import alert
@@ -78,7 +81,16 @@ except NameError:
 
 # Define the main entry point for all of our commands
 # and expose a way for 3rd-party plugins to tie into the Shodan CLI.
-@with_plugins(iter_entry_points('shodan.cli.plugins'))
+def get_entry_points(group):
+    entry_points = importlib_metadata.entry_points()
+
+    if hasattr(entry_points, 'select'):
+        return entry_points.select(group=group)
+
+    return entry_points.get(group, [])
+
+
+@with_plugins(get_entry_points('shodan.cli.plugins'))
 @click.group(context_settings=CONTEXT_SETTINGS)
 def main():
     pass
@@ -942,7 +954,7 @@ def radar():
 @main.command()
 def version():
     """Print version of this tool."""
-    print(pkg_resources.get_distribution("shodan").version)
+    print(importlib_metadata.version('shodan'))
 
 
 if __name__ == '__main__':
